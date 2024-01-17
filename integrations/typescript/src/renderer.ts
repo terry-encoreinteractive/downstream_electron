@@ -26,7 +26,29 @@
 
 import './index.css';
 
-const downstreamInstance = window.downstreamElectronAPI.init(window);
+const persistance = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createPersistentSession (config: any): Promise<string> {
+        return new Promise<string>((resolve) => {
+            console.log('Entered persistance.createPersistentSession', config);
+            setTimeout(() => {
+                console.log('[persistent.createPersistentSession] resolving now');
+                resolve("HelloWorld!");
+            }, 2000);
+        });
+    },
+    removePersistentSession (): Promise<void>  {
+        return new Promise((resolve) => {
+            console.log('Entered persistance.removePersistentSession');
+            setTimeout(() => {
+                console.log('[persistent.removePersistentSession] resolving now');
+                resolve();
+            }, 2000);
+        });
+    }
+}
+
+const downstreamInstance = window.downstreamElectronAPI.init(window, persistance);
 
 downstreamInstance.downloads.create('https://demo.cf.castlabs.com/media/TOS/abr/Manifest_clean_sizes.mpd', '').then(function (result: any) {
     console.log(result);
@@ -37,6 +59,15 @@ downstreamInstance.downloads.create('https://demo.cf.castlabs.com/media/TOS/abr/
         audio: [result.audio[0].id]
     };
     console.log(representations);
+
+    console.log('Attempting to call createPersistent');
+    downstreamInstance.downloads.createPeristent(manifestId, {})
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .then((persistentSessionid: any) => {
+            console.log('Successfull called createPeristent, persistentSessionId:', persistentSessionid);
+        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .catch((reason: any) => console.error('Error calling createPeristent', reason));
 
     downstreamInstance.downloads.start(result.id, representations).then(function () {
         downstreamInstance.downloads.subscribe(result.id, 1000, (error: any, stats: any) => {
